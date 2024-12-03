@@ -3,6 +3,7 @@ package com.example.Fashion_Shop.controller;
 import com.example.Fashion_Shop.dto.OrderDTO;
 import com.example.Fashion_Shop.dto.OrderStatus;
 import com.example.Fashion_Shop.model.Order;
+import com.example.Fashion_Shop.response.orders.OrderResponseAdmin;
 import com.example.Fashion_Shop.service.orders.OrderService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,12 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
+    @GetMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public List<OrderDTO> getAllOrders() {
+        return orderService.getAllOrders();
+    }
+
 
 //    @PostMapping
 //    public ResponseEntity<OrderDTO> createOrUpdateOrder(@RequestBody Order order) {
@@ -66,11 +73,6 @@ public class OrderController {
 //        }
 //    }
 
-    @GetMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public List<OrderDTO> getAllOrders() {
-        return orderService.getAllOrders();
-    }
 
 
     @GetMapping("/{id}")
@@ -93,6 +95,24 @@ public class OrderController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/{orderId}/status")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<OrderResponseAdmin> updateStatusOrder(
+            @PathVariable Long orderId,
+            @RequestParam String newStatus) {
+        try {
+            OrderResponseAdmin updatedOrder = orderService.updateStatusOrder(orderId, newStatus);
+            return ResponseEntity.ok(updatedOrder);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
 
-
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public List<OrderResponseAdmin> getOrderResponseAdmin() {
+        return orderService.getOrderResponseAdmin().stream().toList();
+    }
 }

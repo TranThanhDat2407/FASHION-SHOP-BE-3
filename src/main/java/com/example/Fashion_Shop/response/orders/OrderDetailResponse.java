@@ -20,9 +20,4 @@ public class OrderDetailResponse {
     private String productName;
     private Double totalPrice;
     private String productImage;
-
-
-
-
-
 }

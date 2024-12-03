@@ -4,9 +4,13 @@ import com.example.Fashion_Shop.dto.OrderDTO;
 import com.example.Fashion_Shop.dto.OrderDetailDTO;
 import com.example.Fashion_Shop.model.*;
 import com.example.Fashion_Shop.repository.*;
+import com.example.Fashion_Shop.response.orders.OrderResponseAdmin;
+import com.example.Fashion_Shop.response.user.UserResponse;
 import com.example.Fashion_Shop.service.EmailService;
 import com.example.Fashion_Shop.service.cart.CartService;
 
+import com.example.Fashion_Shop.service.user.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -15,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +40,7 @@ public class OrderService {
 
     private final UserRepository userRepository;
 
+    private final UserService userService;
 
     private CartService cartService;
 
@@ -61,6 +68,8 @@ public class OrderService {
     }
 
 
+
+
     public Order getOrderById(Long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
@@ -72,7 +81,10 @@ public class OrderService {
 
 
     public void deleteOrder(Integer id) {
-        orderRepository.deleteById(id);
+        Order deleteOrder = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + id));
+        deleteOrder.setIsActive(false);
+        orderRepository.save(deleteOrder);
     }
 
 
@@ -188,16 +200,7 @@ public class OrderService {
     }
 
 
-    public Order updateOrder(Long id, Order updatedOrder) {
-        return orderRepository.findById(id)
-                .map(existingOrder -> {
-                    existingOrder.setShippingAddress(updatedOrder.getShippingAddress());
-                    existingOrder.setTotalMoney(updatedOrder.getTotalMoney());
-                    existingOrder.setStatus(updatedOrder.getStatus());
-                    existingOrder.setUser(updatedOrder.getUser());
-                    return orderRepository.save(existingOrder);
-                }).orElseThrow(() -> new RuntimeException("Order not found with id " + id));
-    }
+
 
 
 //    public void updateOrderPayment(Long orderId, String transactionId, String paymentResponse, BigDecimal totalAmount) {
@@ -376,5 +379,72 @@ public class OrderService {
         skuRepository.save(sku);
     }
 
+///////////////////////ADMIN/////////////////////////////
+public OrderResponseAdmin updateStatusOrder(Long id, String newStatus) {
+    // Danh sách trạng thái hợp lệ
+    List<String> validStatuses = Arrays.asList("pending", "processing", "shipped", "delivered", "cancelled");
 
+    // Kiểm tra trạng thái hợp lệ
+    if (!validStatuses.contains(newStatus)) {
+        throw new IllegalArgumentException("Invalid order status: " + newStatus);
+    }
+
+    // Tìm đơn hàng theo ID
+    Order order = orderRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Order không tồn tại"));
+
+    // Cập nhật trạng thái
+    order.setStatus(newStatus);
+    order.setUpdateAt(LocalDateTime.now());
+
+    // Nếu trạng thái là "cancelled", đặt is_active thành false
+    if ("cancelled".equalsIgnoreCase(newStatus)) {
+        order.setIsActive(false);
+    }
+
+    // Lưu thay đổi vào cơ sở dữ liệu
+    Order updatedOrder = orderRepository.save(order);
+
+    // Chuyển đổi Order sang OrderResponseAdmin và trả về
+    return convertToOrderResponseAdmin(updatedOrder);
+}
+
+
+    public List<OrderResponseAdmin> getOrderResponseAdmin() {
+        // Lấy danh sách tất cả các đơn hàng
+        List<Order> orders = orderRepository.findAll();
+
+        // Lọc danh sách để chỉ lấy các đơn hàng có is_active = true
+        return orders.stream()
+                .map(this::convertToOrderResponseAdmin) // Chuyển đổi sang OrderResponseAdmin
+                .collect(Collectors.toList());
+    }
+
+    public OrderResponseAdmin getOrderResponseByIdAdmin(Long orderId) {
+        // Tìm đơn hàng theo ID
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found with ID: " + orderId));
+
+        // Chuyển đổi Order sang OrderResponseAdmin
+        return convertToOrderResponseAdmin(order);
+    }
+
+    private OrderResponseAdmin convertToOrderResponseAdmin(Order order) {
+        OrderResponseAdmin response = OrderResponseAdmin.builder()
+                .id(order.getId())
+                .shippingAddress(order.getShippingAddress())
+                .phoneNumber(order.getPhoneNumber())
+                .totalMoney(order.getTotalMoney())
+                .status(order.getStatus())
+                .userId(order.getUser().getId())
+                .shippingMethod(order.getShippingMethod())
+                .paymentMethod(order.getPaymentMethod())
+                .build();
+
+        // Gán các trường từ BaseResponse
+        response.setCreateAt(order.getCreateAt());
+        response.setUpdateAt(order.getUpdateAt());
+
+        return response;
+    }
 }
