@@ -4,9 +4,17 @@ import com.example.Fashion_Shop.dto.OrderDTO;
 import com.example.Fashion_Shop.dto.OrderDetailDTO;
 import com.example.Fashion_Shop.model.*;
 import com.example.Fashion_Shop.repository.*;
+import com.example.Fashion_Shop.response.attribute_values.ColorResponse;
+import com.example.Fashion_Shop.response.attribute_values.SizeResponse;
+import com.example.Fashion_Shop.response.orderQR.OrderDetailItemQRResponse;
+import com.example.Fashion_Shop.response.orderQR.OrderQRResponse;
+import com.example.Fashion_Shop.response.user.UserResponse;
 import com.example.Fashion_Shop.service.EmailService;
+import com.example.Fashion_Shop.service.QRCodeService;
 import com.example.Fashion_Shop.service.cart.CartService;
 
+import com.google.zxing.WriterException;
+import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -14,7 +22,10 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -28,20 +39,19 @@ public class OrderService {
 
     private final SkuRepository skuRepository;
 
-
     private final CartRepository cartRepository;
-
 
     private final UserRepository userRepository;
 
-
     private CartService cartService;
-
 
     private final AddressRepository addressRepository;
 
-
     private final OrderRepository orderRepository;
+
+    private final OrderDetailRepository orderDetailRepository;
+
+    private final QRCodeService qrCodeService;
 
 
     @Transactional
@@ -77,7 +87,7 @@ public class OrderService {
 
 
     @Transactional
-    public Order createOrderFromCart(Long userId) {
+    public Order createOrderFromCart(Long userId) throws MessagingException {
 
         List<Cart> cartItems = cartRepository.findByUserId(userId);
 
@@ -110,7 +120,7 @@ public class OrderService {
 
         if (order.getShippingMethod() == null || order.getShippingMethod().isEmpty()) {
 //            throw new RuntimeException("Bạn chưa chọn phương thức giao hàng");
-            order.setShippingMethod("Giao hàng nhanh");
+            order.setShippingMethod("Nhận tại cửa hàng");
         } else {
             order.setShippingMethod(order.getShippingMethod());
         }
@@ -119,7 +129,6 @@ public class OrderService {
 //            throw new RuntimeException("Bạn chưa chọn phương thức thanh toán");
             order.setPaymentMethod("Thanh toán khi nhận hàng");
         } else {
-
             order.setPaymentMethod(order.getPaymentMethod());
         }
 
@@ -155,7 +164,24 @@ public class OrderService {
             System.out.println("OrderDetail đã lưu với ID: " + detail.getId()); // In ID sau khi lưu
         }
 
-        sendOrderConfirmationEmail(savedOrder);
+        System.out.println(order.getShippingMethod());
+        if ("Nhận tại cửa hàng".equalsIgnoreCase(order.getShippingMethod())) {
+            try {
+                String qrCodePath = qrCodeService.generateQRCode(
+                        savedOrder.getId().toString(),
+                        300, 300
+                );
+                sendOrderConfirmationEmailWithQRCode(savedOrder, qrCodePath);
+
+                Path path = FileSystems.getDefault().getPath(qrCodePath);
+                String fileName = path.getFileName().toString();
+                order.setQrCode(fileName);
+            } catch (IOException | WriterException e) {
+                throw new RuntimeException("Lỗi khi tạo hoặc gửi mã QR: " + e.getMessage());
+            }
+        } else {
+            sendOrderConfirmationEmail(savedOrder);
+        }
 
         cartService.deleteAllCart(userId);
 
@@ -163,7 +189,7 @@ public class OrderService {
     }
 
 
-    private void sendOrderConfirmationEmail(Order savedOrder) {
+    private void sendOrderConfirmationEmail(Order savedOrder) throws MessagingException {
         String recipientEmail = savedOrder.getUser().getEmail();
         String subject = "Xác Nhận Đơn Hàng - #" + savedOrder.getId();
         StringBuilder body = new StringBuilder();
@@ -178,6 +204,8 @@ public class OrderService {
         savedOrder.getOrderDetails().forEach(orderDetail -> {
             body.append("Sản phẩm: ").append(orderDetail.getSku().getProduct().getName())
                     .append(" - Số lượng: ").append(orderDetail.getQuantity())
+                    .append(" - Màu: ").append(orderDetail.getSku().getColor().getValueName())
+                    .append(" - Size: ").append(orderDetail.getSku().getSize().getValueName())
                     .append(" - Giá: ").append(orderDetail.getPrice()).append("<br>");
         });
 
@@ -185,6 +213,31 @@ public class OrderService {
 
         // Gửi email
         mailerService.sendEmail(recipientEmail, subject, body.toString());
+    }
+
+    private void sendOrderConfirmationEmailWithQRCode(Order savedOrder, String qrCodeUrl) throws MessagingException {
+        String recipientEmail = savedOrder.getUser().getEmail();
+        String subject = "Xác Nhận Đơn Hàng - #" + savedOrder.getId();
+        StringBuilder body = new StringBuilder();
+
+        body.append("Chào ").append(savedOrder.getUser().getName()).append(",<br><br>");
+        body.append("Cảm ơn bạn đã đặt hàng tại cửa hàng của chúng tôi. Đây là thông tin đơn hàng của bạn:<br>");
+        body.append("<b>Đơn hàng ID: </b>").append(savedOrder.getId()).append("<br>");
+        body.append("<b>Phương thức giao hàng: </b>").append(savedOrder.getShippingMethod()).append("<br>");
+        body.append("<b>Tổng tiền: </b>").append(savedOrder.getTotalMoney()).append("<br><br>");
+        body.append("<b>Mã QR của bạn:</b><br>");
+        body.append("<img src='cid:qrCode' alt='QR Code'/><br><br>");
+        savedOrder.getOrderDetails().forEach(orderDetail -> {
+            body.append("Sản phẩm: ")
+                    .append(orderDetail.getSku().getProduct().getName())
+                    .append(" - Số lượng: ").append(orderDetail.getQuantity())
+                    .append(" - Màu: ").append(orderDetail.getSku().getColor().getValueName())
+                    .append(" - Size: ").append(orderDetail.getSku().getSize().getValueName())
+                    .append(" - Giá: ").append(orderDetail.getPrice()).append("<br>");
+        });
+        body.append("Cảm ơn bạn đã mua sắm tại cửa hàng của chúng tôi!");
+
+       mailerService.sendEmailWithAttachment(recipientEmail, subject, body.toString(), qrCodeUrl);
     }
 
 
@@ -275,7 +328,7 @@ public class OrderService {
                 .collect(Collectors.toList());
 
         return OrderDTO.builder()
-                .orderId(order.getId())
+                .orderId(Math.toIntExact(order.getId()))
                 .shippingAddress(order.getShippingAddress())
                 .phoneNumber(order.getPhoneNumber() != null ? order.getPhoneNumber() : "")
                 .totalMoney(order.getTotalMoney() != null ? order.getTotalMoney() : BigDecimal.ZERO)
@@ -376,5 +429,62 @@ public class OrderService {
         skuRepository.save(sku);
     }
 
+    public OrderQRResponse getOrderDetailsQR(Long orderId) {
+        // Lấy thông tin đơn hàng
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order không tồn tại"));
+
+        // Lấy danh sách OrderDetail cho đơn hàng
+        List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
+
+        // Chuyển đổi thành OrderQRResponse
+        OrderQRResponse response = OrderQRResponse.builder()
+                .id(order.getId())
+                .user(UserResponse.fromUser(order.getUser()))
+                .shippingAddress(order.getShippingAddress())
+                .totalMoney(order.getTotalMoney())
+                .shippingMethod(order.getShippingMethod())
+                .paymentMethod(order.getPaymentMethod())
+                .status(order.getStatus())
+                .orderDetailItems(orderDetails.stream().map(orderDetail -> {
+                    SKU sku = orderDetail.getSku();
+                    Product product = sku.getProduct();
+                    AttributeValue color = sku.getColor();
+                    AttributeValue size = sku.getSize();
+
+                    return OrderDetailItemQRResponse.builder()
+                            .productName(product.getName())
+                            .quantity(orderDetail.getQuantity())
+                            .price(orderDetail.getPrice())
+                            .color(ColorResponse.builder()
+                                    .id(color.getId())
+                                    .name(color.getValueName())
+                                    .build())
+                            .size(SizeResponse.builder()
+                                    .id(size.getId())
+                                    .name(size.getValueName())
+                                    .build())
+                            .productImage(getProductImageForVariant(product, color, size))
+                            .build();
+                }).collect(Collectors.toList()))
+                .build();
+
+        return response;
+    }
+
+    public String getProductImageForVariant(Product product, AttributeValue color, AttributeValue size) {
+        return product.getProductImages().stream()
+                .filter(image -> image.getProduct().getId().equals(product.getId()) &&
+                        image.getColor().getId().equals(color.getId())) // Thêm điều kiện kích thước
+                .findFirst()
+                .map(ProductImage::getImageUrl)
+                .orElse(null); // Nếu không tìm thấy, trả về null hoặc ảnh mặc định
+    }
+
+    public Order updateOrderQRStatus(Long orderId, OrderQRResponse updatedOrder) {
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+        order.setStatus(updatedOrder.getStatus());  // Cập nhật trạng thái
+        return orderRepository.save(order);  // Lưu lại đơn hàng đã cập nhật
+    }
 
 }

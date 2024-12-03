@@ -16,6 +16,7 @@ import com.example.Fashion_Shop.repository.TokenRepository;
 import com.example.Fashion_Shop.repository.UserRepository;
 import com.example.Fashion_Shop.service.EmailService;
 import com.example.Fashion_Shop.util.MessageKeys;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -176,7 +177,7 @@ public class UserService implements IUserService {
         return userRepository.existsByPhone(phone);
     }
 
-    public void generateAndSendOTP(String email) {
+    public void generateAndSendOTP(String email)  throws MessagingException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy email."));
 
@@ -204,7 +205,7 @@ public class UserService implements IUserService {
         return false;
     }
 
-    public void resetPassword(String email, String newPassword) throws DataNotFoundException {
+    public void resetPassword(String email, String newPassword) throws DataNotFoundException , MessagingException{
         User existingUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException("User not found"));
         String encodedPassword = passwordEncoder.encode(newPassword);

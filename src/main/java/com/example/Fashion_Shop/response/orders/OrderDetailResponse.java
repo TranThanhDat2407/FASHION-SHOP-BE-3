@@ -21,8 +21,4 @@ public class OrderDetailResponse {
     private Double totalPrice;
     private String productImage;
 
-
-
-
-
 }

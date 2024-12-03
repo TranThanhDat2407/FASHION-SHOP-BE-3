@@ -3,7 +3,9 @@ package com.example.Fashion_Shop.controller;
 import com.example.Fashion_Shop.dto.OrderDTO;
 import com.example.Fashion_Shop.dto.OrderStatus;
 import com.example.Fashion_Shop.model.Order;
+import com.example.Fashion_Shop.response.orderQR.OrderQRResponse;
 import com.example.Fashion_Shop.service.orders.OrderService;
+import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -47,7 +49,7 @@ public class OrderController {
 
     @PostMapping("/create-from-cart/{userId}")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<OrderDTO> createOrderFromCart(@PathVariable Long userId) {
+    public ResponseEntity<OrderDTO> createOrderFromCart(@PathVariable Long userId)  throws MessagingException {
 
         Order savedOrder = orderService.createOrderFromCart(userId);
 
@@ -94,5 +96,25 @@ public class OrderController {
     }
 
 
+    @GetMapping("/QR/{orderId}")
+    public OrderQRResponse getOrderDetails(@PathVariable("orderId") Long orderId) {
+        return orderService.getOrderDetailsQR(orderId);
+    }
+
+    @PutMapping("/QR/{orderId}/status")
+    public ResponseEntity<String> updateOrderStatus(
+            @PathVariable Long orderId,
+            @RequestBody OrderQRResponse updatedOrder) {
+        try {
+            // Cập nhật trạng thái đơn hàng
+            Order order = orderService.updateOrderQRStatus(orderId, updatedOrder);
+
+            // Trả về thông điệp thành công
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            // Trả về thông điệp lỗi nếu có lỗi xảy ra
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error updating order status: " + e.getMessage());
+        }
+    }
 
 }
