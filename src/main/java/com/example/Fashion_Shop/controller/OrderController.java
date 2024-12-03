@@ -4,7 +4,9 @@ import com.example.Fashion_Shop.dto.OrderDTO;
 import com.example.Fashion_Shop.dto.OrderStatus;
 import com.example.Fashion_Shop.model.Order;
 import com.example.Fashion_Shop.response.orders.OrderResponseAdmin;
+import com.example.Fashion_Shop.response.orderQR.OrderQRResponse;
 import com.example.Fashion_Shop.service.orders.OrderService;
+import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -39,11 +41,11 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
-    @GetMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public List<OrderDTO> getAllOrders() {
-        return orderService.getAllOrders();
-    }
+//    @GetMapping
+//    @PreAuthorize("hasRole('ROLE_ADMIN')")
+//    public List<OrderDTO> getAllOrders() {
+//        return orderService.getAllOrders();
+//    }
 
 
 //    @PostMapping
@@ -55,7 +57,7 @@ public class OrderController {
 
     @PostMapping("/create-from-cart/{userId}")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<OrderDTO> createOrderFromCart(@PathVariable Long userId) {
+    public ResponseEntity<OrderDTO> createOrderFromCart(@PathVariable Long userId)  throws MessagingException {
 
         Order savedOrder = orderService.createOrderFromCart(userId);
 
@@ -74,6 +76,11 @@ public class OrderController {
 //        }
 //    }
 
+    @GetMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public List<OrderDTO> getAllOrders() {
+        return orderService.getAllOrders();
+    }
 
 
     @GetMapping("/{id}")
@@ -96,24 +103,26 @@ public class OrderController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/{orderId}/status")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<OrderResponseAdmin> updateStatusOrder(
+
+    @GetMapping("/QR/{orderId}")
+    public OrderQRResponse getOrderDetails(@PathVariable("orderId") Long orderId) {
+        return orderService.getOrderDetailsQR(orderId);
+    }
+
+    @PutMapping("/QR/{orderId}/status")
+    public ResponseEntity<String> updateOrderStatus(
             @PathVariable Long orderId,
-            @RequestParam String newStatus) {
+            @RequestBody OrderQRResponse updatedOrder) {
         try {
-            OrderResponseAdmin updatedOrder = orderService.updateStatusOrder(orderId, newStatus);
-            return ResponseEntity.ok(updatedOrder);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            // Cập nhật trạng thái đơn hàng
+           orderService.updateOrderQRStatus(orderId, updatedOrder);
+
+            // Trả về thông điệp thành công
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            // Trả về thông điệp lỗi nếu có lỗi xảy ra
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error updating order status: " + e.getMessage());
         }
     }
 
-    @GetMapping("/admin")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public List<OrderResponseAdmin> getOrderResponseAdmin() {
-        return orderService.getOrderResponseAdmin().stream().toList();
-    }
 }

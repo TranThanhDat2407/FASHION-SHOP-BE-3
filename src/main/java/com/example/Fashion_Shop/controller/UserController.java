@@ -14,6 +14,7 @@ import com.example.Fashion_Shop.service.user.UserService;
 import com.example.Fashion_Shop.util.MessageKeys;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -174,7 +175,7 @@ public class UserController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+    public ResponseEntity<?> forgotPassword(@RequestParam String email)  throws MessagingException {
         userService.generateAndSendOTP(email);
         return ResponseEntity.ok().build();
     }
