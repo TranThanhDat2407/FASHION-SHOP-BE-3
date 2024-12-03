@@ -107,7 +107,7 @@ public class OrderController {
             @RequestBody OrderQRResponse updatedOrder) {
         try {
             // Cập nhật trạng thái đơn hàng
-            Order order = orderService.updateOrderQRStatus(orderId, updatedOrder);
+           orderService.updateOrderQRStatus(orderId, updatedOrder);
 
             // Trả về thông điệp thành công
             return ResponseEntity.ok().build();
