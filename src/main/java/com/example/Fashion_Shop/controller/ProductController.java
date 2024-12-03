@@ -15,7 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("${api.prefix}/products")
@@ -58,12 +60,31 @@ public class ProductController {
     }
 
     @PostMapping("/addProduct")
-    public ResponseEntity<Product> createProduct(@RequestBody CreateProductDTO createProductDTO) {
+    public ResponseEntity<?> createProduct(@RequestBody CreateProductDTO createProductDTO) {
+        try {
+            // Tạo sản phẩm từ DTO mà không trả về sản phẩm
+            productService.createProduct(createProductDTO);
 
-        Product product = productService.createProduct(createProductDTO);
-        System.out.println(product.toString());
-        return ResponseEntity.status(HttpStatus.CREATED).body(product);
+            // Tạo phản hồi thành công mà không trả về sản phẩm
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Product created successfully!");
+
+            // Trả về phản hồi với status CREATED (201)
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (Exception e) {
+            // Xử lý lỗi và trả về phản hồi chi tiết
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Error creating product.");
+            errorResponse.put("error", e.getMessage()); // Trả về thông báo lỗi chi tiết
+
+            // Trả về phản hồi với status INTERNAL_SERVER_ERROR (500)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
+
 
     @GetMapping("/AllProducts")
     public ResponseEntity<ProductListResponse> getAllProducts(
