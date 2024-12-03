@@ -1,5 +1,6 @@
 package com.example.Fashion_Shop.response.product;
 
+import com.example.Fashion_Shop.model.Category;
 import com.example.Fashion_Shop.model.Product;
 import com.example.Fashion_Shop.model.Review;
 import com.example.Fashion_Shop.response.BaseResponse;
@@ -18,6 +19,8 @@ import java.util.stream.Collectors;
 public class ProductResponse extends BaseResponse{
     private Long id;
     private String name;
+    private Long categoryId;
+    private String description;
     private List<SkuResponse> skus;
     private List<ProductImageResponse> productImages;
     private Double avgRating;
@@ -44,6 +47,8 @@ public class ProductResponse extends BaseResponse{
 
         ProductResponse productResponse = ProductResponse.builder()
                 .id(product.getId())
+                .description(product.getDescription())
+                .categoryId(product.getCategory().getId())
                 .name(product.getName())
                 .skus(skuResponses)
                 .productImages(productImageResponses)
