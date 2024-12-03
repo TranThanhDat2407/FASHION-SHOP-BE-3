@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
 
 @SpringBootApplication
+@Import({OpenAIConfig.class, QdrantConfig.class})
 public class FashionShopApplication {
 
 	public static void main(String[] args) {
