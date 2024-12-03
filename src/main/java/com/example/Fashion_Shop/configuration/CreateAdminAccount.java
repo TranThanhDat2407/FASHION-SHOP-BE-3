@@ -38,6 +38,7 @@ public class CreateAdminAccount {
                         .name("admin")
                         .email(adminEmail)
                         .password(passwordEncoder.encode("Abc123")) // Mã hóa mật khẩu
+                        .password(passwordEncoder.encode("Admin123")) // Mã hóa mật khẩu
                         .role(role) // Gán role admin
                         .active(true)
                         .build();

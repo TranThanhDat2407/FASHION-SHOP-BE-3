@@ -1,16 +1,13 @@
 package com.example.Fashion_Shop.response.wishlist;
 
 import com.example.Fashion_Shop.model.ProductImage;
-import com.example.Fashion_Shop.model.SKU;
 import com.example.Fashion_Shop.model.Wishlist;
-import com.example.Fashion_Shop.response.BaseResponse;
 import com.example.Fashion_Shop.response.SKU.SkuResponse;
-import com.example.Fashion_Shop.response.product_images.ProductImageResponse;
 import com.example.Fashion_Shop.service.productImage.ProductImageService;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.jetbrains.annotations.NotNull;
 
 @Setter
 @Getter
@@ -28,23 +25,21 @@ public class WishlistItemResponse {
     String productImage;
     SkuResponse skuResponse;
 
-    @Setter
-    static ProductImageService productImageService; // Static để dùng chung trong toàn bộ ứng dụng
 
-    public static WishlistItemResponse fromWishlist(Wishlist wishlist) {
-        Long colorId = wishlist.getSku().getColor() != null ? wishlist.getSku().getColor().getId() : null;
-        Long productId = wishlist.getSku().getProduct() != null ? wishlist.getSku().getProduct().getId() : null;
-        log.info("Ma color: "+colorId+"Ma product: "+productId);
+    public static WishlistItemResponse fromWishlist(@NotNull Wishlist wishlist) {
+
         WishlistItemResponse wishlistItemResponse = WishlistItemResponse.builder()
-                .id(wishlist.getId())
-                .productId(wishlist.getSku().getId())
-                .productName(wishlist.getSku().getProduct().getName())
-                .price(wishlist.getSku().getSalePrice())
-                .productImage(productImageService.getProductImageByColorIdAndProductId(
-                        colorId,
-                        productId
-                ))
-                .skuResponse(SkuResponse.fromSKU(wishlist.getSku()))
+                .id(wishlist.getId()) // ID của mục giỏ hàng
+                .productId(wishlist.getSku().getProduct().getId()) // ID sản phẩm từ SKU
+                .productName(wishlist.getSku().getProduct().getName()) // Tên sản phẩm từ SKU
+                .price(wishlist.getSku().getSalePrice()) // Giá bán từ SKU
+                .productImage(wishlist.getSku().getProduct().getProductImages().stream()
+                        .filter(image -> image.getProduct().getId().equals(wishlist.getSku().getProduct().getId()) &&
+                                image.getColor().getId().equals(wishlist.getSku().getColor().getId()))
+                        .findFirst()
+                        .map(ProductImage::getImageUrl)
+                        .orElse(null)) // Ensure null is returned if no match
+                .skuResponse(SkuResponse.fromSKU(wishlist.getSku())) // Chuyển đổi SKU thành SkuResponse
                 .build();
         return wishlistItemResponse;
     }
