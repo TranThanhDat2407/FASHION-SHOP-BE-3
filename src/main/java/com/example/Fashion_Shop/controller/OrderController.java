@@ -124,4 +124,25 @@ public class OrderController {
         }
     }
 
+
+    @PutMapping("/{orderId}/status")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<OrderResponseAdmin> updateStatusOrder(
+            @PathVariable Long orderId,
+            @RequestParam String newStatus) {
+        try {
+            OrderResponseAdmin updatedOrder = orderService.updateStatusOrder(orderId, newStatus);
+            return ResponseEntity.ok(updatedOrder);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public List<OrderResponseAdmin> getOrderResponseAdmin() {
+        return orderService.getOrderResponseAdmin().stream().toList();
+    }
 }
