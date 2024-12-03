@@ -91,7 +91,8 @@ public class UserController {
             String token = userService.login(
                     userLoginDTO.getEmail(),
                     userLoginDTO.getPassword(),
-                    userLoginDTO.getRoleId() == null ? 2 : userLoginDTO.getRoleId()
+                    userLoginDTO.getRoleId()
+                            == null ? 2 : userLoginDTO.getRoleId()
             );
             String userAgent = request.getHeader("User-Agent");
             User userDetail = userService.getUserDetailsFromToken(token);

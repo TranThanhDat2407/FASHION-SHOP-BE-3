@@ -3,6 +3,7 @@ package com.example.Fashion_Shop.controller;
 import com.example.Fashion_Shop.dto.OrderDTO;
 import com.example.Fashion_Shop.dto.OrderStatus;
 import com.example.Fashion_Shop.model.Order;
+import com.example.Fashion_Shop.response.orders.OrderResponseAdmin;
 import com.example.Fashion_Shop.response.orderQR.OrderQRResponse;
 import com.example.Fashion_Shop.service.orders.OrderService;
 import jakarta.mail.MessagingException;
@@ -38,6 +39,12 @@ public class OrderController {
 
         return ResponseEntity.ok(orders);
     }
+
+//    @GetMapping
+//    @PreAuthorize("hasRole('ROLE_ADMIN')")
+//    public List<OrderDTO> getAllOrders() {
+//        return orderService.getAllOrders();
+//    }
 
 
 //    @PostMapping

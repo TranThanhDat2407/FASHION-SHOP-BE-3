@@ -56,7 +56,7 @@ public class UserService implements IUserService {
         if (userRepository.existsByPhone(phone)) {
             throw new DataIntegrityViolationException("Số điện thoại đã tồn tại");
         }
-        Role role = roleRepository.findById(userDTO.getRoleId())
+        Role role = roleRepository.findById(1L)
                 .orElseThrow(() -> new DataNotFoundException(
                         localizationUtils.getLocalizedMessage(MessageKeys.ROLE_DOES_NOT_EXISTS)));
         if (role.getName().toUpperCase().equals(Role.ADMIN)) {
