@@ -115,7 +115,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 Pair.of(String.format("%s/users/forgot-password", apiPrefix), "POST"),
                 Pair.of(String.format("%s/users/verify-otp", apiPrefix), "POST"),
                 Pair.of(String.format("%s/users/reset-password", apiPrefix), "POST"),
-                Pair.of(String.format("%s/users/refreshToken", apiPrefix), "POST")
+                Pair.of(String.format("%s/users/refreshToken", apiPrefix), "POST"),
+                Pair.of(String.format("%s/chat-ai**", apiPrefix), "GET")
         );
         String requestPath = request.getServletPath();
         String requestMethod = request.getMethod();

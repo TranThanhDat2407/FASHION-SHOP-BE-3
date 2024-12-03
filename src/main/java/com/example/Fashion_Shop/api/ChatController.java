@@ -5,17 +5,14 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.qdrant.QdrantVectorStore;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@CrossOrigin("*")
+@RequestMapping("${api.prefix}")
 public class ChatController {
     // Đối tượng để tương tác với LLM(OpenAi)
     private final ChatClient chatClient;
@@ -29,7 +26,7 @@ public class ChatController {
         this.qdrantVectorStore = draQdrantVectorStore;
     }
 
-    @GetMapping("chat-ai")
+    @GetMapping("/chat-ai")
     public ResponseEntity<Map<String, String>> doChat(@RequestParam String message) {
         String context = ""; // Reset context mỗi khi có request mới
         try {
