@@ -17,6 +17,8 @@ public class SizeDTO {
     private String name;
     private Long attribute_id;
 
+
+
     public static SizeDTO fromSize(AttributeValue size) {
         return SizeDTO.builder()
                 .id(size.getId())               // Lấy ID từ AttributeValue

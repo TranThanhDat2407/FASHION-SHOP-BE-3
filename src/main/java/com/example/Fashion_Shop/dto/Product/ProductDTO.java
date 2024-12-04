@@ -22,6 +22,7 @@ public class ProductDTO extends BaseDTO {
     private List<SkuDTO> skus;
     private List<ProductImageDTO> productImages;
 
+
     public static class ProductDTOBuilder {
         private Long id;
         private String category_id;

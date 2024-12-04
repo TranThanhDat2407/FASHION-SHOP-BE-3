@@ -21,6 +21,7 @@ public class SkuResponse {
     private ColorResponse color;
     private SizeResponse size;
 
+
     public static SkuResponse fromSKU(SKU sku) {
 
         ColorResponse colorResponse = ColorResponse.fromColor(sku.getColor());

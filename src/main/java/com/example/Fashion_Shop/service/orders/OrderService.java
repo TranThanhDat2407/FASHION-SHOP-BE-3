@@ -2,6 +2,9 @@ package com.example.Fashion_Shop.service.orders;
 
 import com.example.Fashion_Shop.dto.OrderDTO;
 import com.example.Fashion_Shop.dto.OrderDetailDTO;
+import com.example.Fashion_Shop.dto.SkuDTO.SkuDTO;
+import com.example.Fashion_Shop.dto.attribute_values.ColorDTO;
+import com.example.Fashion_Shop.dto.attribute_values.SizeDTO;
 import com.example.Fashion_Shop.model.*;
 import com.example.Fashion_Shop.repository.*;
 import com.example.Fashion_Shop.service.EmailService;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -53,6 +57,9 @@ public class OrderService {
     @Transactional
     public List<OrderDTO> getOrdersByUserId(Integer userId) {
         List<Order> orders = orderRepository.findByUser_Id(userId);
+
+        // Sắp xếp danh sách đơn hàng theo ngày tạo giảm dần
+        orders.sort(Comparator.comparing(Order::getCreateAt).reversed());
 
         // Chuyển Order thành danh sách OrderDTO
         return orders.stream()
@@ -251,6 +258,43 @@ public class OrderService {
 //
 //    }
 
+//
+//    public OrderDTO convertToDTO(Order order) {
+//        List<OrderDetailDTO> orderDetailDTOs = order.getOrderDetails().stream()
+//                .map(detail -> {
+//                    System.out.println("OrderDetail ID: " + detail.getId());
+//                    SKU sku = detail.getSku();
+//                    System.out.println("SKU: " + sku);
+//                    Long skuId = (sku != null) ? sku.getId() : null;
+//                    if (skuId != null && skuId > Integer.MAX_VALUE) {
+//                        throw new IllegalArgumentException("SKU ID vượt quá giới hạn ");
+//                    }
+//                    return OrderDetailDTO.builder()
+//                            .id(detail.getId())
+//                            .sku(detail.getSku())
+//                            .quantity(detail.getQuantity())
+//                            .price(detail.getPrice())
+//                            .totalMoney(detail.getTotalMoney())
+//                            .build();
+//
+//
+//                })
+//                .collect(Collectors.toList());
+//
+//        return OrderDTO.builder()
+//                .orderId(order.getId())
+//                .shippingAddress(order.getShippingAddress())
+//                .phoneNumber(order.getPhoneNumber() != null ? order.getPhoneNumber() : "")
+//                .totalMoney(order.getTotalMoney() != null ? order.getTotalMoney() : BigDecimal.ZERO)
+//                .status(order.getStatus())
+//                .qrCode(order.getQrCode() != null ? order.getQrCode() : "")
+//                .paymentMethod(order.getPaymentMethod() != null ? order.getPaymentMethod() : "Thanh toán khi nhận hàng")
+//                .shippingMethod(order.getShippingMethod() != null ? order.getShippingMethod() : "Giao hàng nhanh")
+//                .orderDetails(orderDetailDTOs)
+//                .build();
+//    }
+
+
 
     public OrderDTO convertToDTO(Order order) {
         List<OrderDetailDTO> orderDetailDTOs = order.getOrderDetails().stream()
@@ -258,19 +302,26 @@ public class OrderService {
                     System.out.println("OrderDetail ID: " + detail.getId());
                     SKU sku = detail.getSku();
                     System.out.println("SKU: " + sku);
-                    Long skuId = (sku != null) ? sku.getId() : null;
-                    if (skuId != null && skuId > Integer.MAX_VALUE) {
-                        throw new IllegalArgumentException("SKU ID vượt quá giới hạn ");
+
+                    SkuDTO skuDTO = null;
+                    if (sku != null) {
+                        // Chuyển đổi SKU entity sang SkuDTO
+                        skuDTO = SkuDTO.builder()
+                                .qtyInStock(sku.getQtyInStock())
+                                .originalPrice(sku.getOriginalPrice())
+                                .salePrice(sku.getSalePrice())
+                                .color(ColorDTO.fromColor(sku.getColor()))
+                                .size(SizeDTO.fromSize(sku.getSize()))
+                                .build();
                     }
+
                     return OrderDetailDTO.builder()
                             .id(detail.getId())
-                            .skuId(detail.getSku().getId())
+                            .skuDTO(skuDTO)  // Gán SkuDTO vào OrderDetailDTO
                             .quantity(detail.getQuantity())
                             .price(detail.getPrice())
                             .totalMoney(detail.getTotalMoney())
                             .build();
-
-
                 })
                 .collect(Collectors.toList());
 

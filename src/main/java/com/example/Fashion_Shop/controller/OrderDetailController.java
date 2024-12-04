@@ -1,6 +1,6 @@
 package com.example.Fashion_Shop.controller;
-import com.example.Fashion_Shop.dto.OrderDetailDTO;
 import com.example.Fashion_Shop.model.OrderDetail;
+import com.example.Fashion_Shop.response.orders.ProfileOrderDetailResponse;
 import com.example.Fashion_Shop.service.order_detail.OrderDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -49,11 +49,25 @@ public class OrderDetailController {
     }
 
 
+//    @GetMapping("/order/{orderId}")
+//    public List<OrderDetailDTO> getOrderDetailsByOrderId(@PathVariable Integer orderId) {
+//        System.out.println("Fetching order details for orderId: " + orderId);
+//        return orderDetailService.getOrderDetailsByOrderId(orderId);
+//    }
+
     @GetMapping("/order/{orderId}")
-    public List<OrderDetailDTO> getOrderDetailsByOrderId(@PathVariable Integer orderId) {
+    public ProfileOrderDetailResponse getOrderDetailsByOrderId(@PathVariable Integer orderId) {
         System.out.println("Fetching order details for orderId: " + orderId);
         return orderDetailService.getOrderDetailsByOrderId(orderId);
     }
+//
+//    @GetMapping("/order/{orderId}/{skuId}")
+//    public List<OrderDetailResponse> getOrderDetailsByOrderIdAndSkuId(@PathVariable Integer orderId, @PathVariable Long skuId) {
+//        System.out.println("Fetching order details for orderId: " + orderId + " and skuId: " + skuId);
+//        return orderDetailService.getOrderDetailsByOrderIdAndSkuId(orderId, skuId);
+//    }
+
+
 
 
     @DeleteMapping("/{id}")

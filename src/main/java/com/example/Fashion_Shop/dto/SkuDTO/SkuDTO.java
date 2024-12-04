@@ -1,5 +1,6 @@
 package com.example.Fashion_Shop.dto.SkuDTO;
 
+import com.example.Fashion_Shop.dto.Product.ProductDTO;
 import com.example.Fashion_Shop.dto.attribute_values.AttributeValueDTO;
 import com.example.Fashion_Shop.dto.attribute_values.ColorDTO;
 import com.example.Fashion_Shop.dto.attribute_values.SizeDTO;
@@ -19,8 +20,6 @@ public class SkuDTO {
     private Double salePrice;
     private ColorDTO color;
     private SizeDTO size;
-
-
 
 
     public SKU toEntity() {
