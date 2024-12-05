@@ -4,6 +4,8 @@ import com.example.Fashion_Shop.response.attribute_values.ColorResponse;
 import com.example.Fashion_Shop.response.attribute_values.SizeResponse;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -16,4 +18,5 @@ public class OrderDetailItemQRResponse {
     private ColorResponse color;
     private SizeResponse size;
     private String productImage;
+
 }

@@ -7,6 +7,7 @@ import com.example.Fashion_Shop.model.Category;
 import com.example.Fashion_Shop.response.category.CategoryResponse;
 import com.example.Fashion_Shop.service.category.CategoryService;
 import com.example.Fashion_Shop.util.MessageKeys;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,7 @@ public class CategoryController {
 
     @PostMapping("")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Create new category", description = "Create a new category")
     public ResponseEntity<CategoryResponse> createCategory(
             @Valid @RequestBody CategoryDTO categoryDTO,
             BindingResult result

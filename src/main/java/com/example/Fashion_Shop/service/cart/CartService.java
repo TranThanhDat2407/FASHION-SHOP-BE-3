@@ -17,8 +17,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -71,7 +73,7 @@ public class CartService {
         return CartItemResponse.fromCart(savedCart);
     }
 
-    public Integer countCartItem(Long userId){
+    public Integer countCartItem(Long userId) {
         return cartRepository.sumQuantityByUserId(userId);
     }
 
@@ -96,12 +98,12 @@ public class CartService {
             cartRepository.delete(cartItem);
             return null;
         } else {
-            if(newQuantity > cartItem.getSku().getQtyInStock()) {
+            if (newQuantity > cartItem.getSku().getQtyInStock()) {
                 cartItem.setQuantity(cartItem.getSku().getQtyInStock());
-            }else{
+            } else {
                 cartItem.setQuantity(newQuantity);
             }
-             cartRepository.save(cartItem);
+            cartRepository.save(cartItem);
             return CartItemResponse.fromCart(cartItem);
         }
     }
@@ -118,6 +120,24 @@ public class CartService {
                     return CartItemResponse.fromGuestCart(sku, product, item.getQuantity());
                 })
                 .toList();
+    }
+
+    /*
+                       ┌───────────── giây (0 - 59)
+                       │ ┌─────────── phút (0 - 59)
+                       │ │ ┌───────── giờ (0 - 23)
+                       │ │ │ ┌─────── ngày trong tháng (1 - 31)
+                       │ │ │ │ ┌───── tháng (1 - 12 hoặc JAN-DEC)
+                       │ │ │ │ │ ┌─── ngày trong tuần (0 - 7 hoặc SUN-SAT, cả 0 và 7 đều là Chủ nhật)
+                       │ │ │ │ │ │
+                       * * * * * ?
+    */
+    @Scheduled(cron = "0 0 2 * * ?")
+    @Transactional
+    public void cleanupOldCarts() {
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(30);
+        int deletedCount = cartRepository.deleteByCreatedAtBefore(cutoffDate);
+        System.out.println("Deleted " + deletedCount + " old carts.");
     }
 
 }

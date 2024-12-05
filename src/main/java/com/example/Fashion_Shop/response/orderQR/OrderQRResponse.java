@@ -7,6 +7,7 @@ import com.example.Fashion_Shop.response.user.UserResponse;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -23,6 +24,7 @@ public class OrderQRResponse {
     private String paymentMethod;  // Phương thức thanh toán
     private String status;
     private List<OrderDetailItemQRResponse> orderDetailItems;
-
+    private LocalDateTime createAt;
+    private LocalDateTime updateAt;
 
 }

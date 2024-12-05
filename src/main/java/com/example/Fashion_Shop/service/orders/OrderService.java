@@ -460,6 +460,8 @@ public class OrderService {
                 .shippingMethod(order.getShippingMethod())
                 .paymentMethod(order.getPaymentMethod())
                 .status(order.getStatus())
+                .createAt(order.getCreateAt())
+                .updateAt(order.getUpdateAt())
                 .orderDetailItems(orderDetails.stream().map(orderDetail -> {
                     SKU sku = orderDetail.getSku();
                     Product product = sku.getProduct();
@@ -538,6 +540,16 @@ public OrderResponseAdmin updateStatusOrder(Long id, String newStatus) {
         // Lọc danh sách để chỉ lấy các đơn hàng có is_active = true
         return orders.stream()
                 .map(this::convertToOrderResponseAdmin) // Chuyển đổi sang OrderResponseAdmin
+                .collect(Collectors.toList());
+    }
+
+    public List<OrderResponseAdmin> getOrderResponseAdmin(int month, int year) {
+        // Lấy danh sách đơn hàng theo tháng và năm
+        List<Order> orders = orderRepository.findByMonthAndYear(month, year);
+
+        // Chuyển đổi danh sách Order sang OrderResponseAdmin
+        return orders.stream()
+                .map(this::convertToOrderResponseAdmin) // Chuyển đổi sang DTO
                 .collect(Collectors.toList());
     }
 

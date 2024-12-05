@@ -18,13 +18,16 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("${api.prefix}/users")
@@ -181,11 +184,14 @@ public class UserController {
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<String> verifyOtp(@RequestParam String email, @RequestParam String otp) {
+    public ResponseEntity<Map<String, String>> verifyOtp(@RequestParam String email, @RequestParam String otp) {
+        Map<String, String> response = new HashMap<>();
         if (userService.verifyOtp(email, otp)) {
-            return ResponseEntity.ok().build();
+            response.put("message", "OTP xác nhận thành công.");
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(400).body("Invalid or expired OTP.");
+            response.put("message", "OTP không hợp lệ hoặc đã hết hạn.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 

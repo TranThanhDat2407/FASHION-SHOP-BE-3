@@ -40,6 +40,7 @@ public class WebSercurityConfig {
         http
                 //.addFilterBefore(corsFilter, JwtTokenFilter.class)
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
+
                 .authorizeHttpRequests(requests -> {
                     requests
                             .requestMatchers(
@@ -53,7 +54,18 @@ public class WebSercurityConfig {
                                     String.format("%s/cart/**", apiPrefix),
                                     String.format("%s/reviews/**", apiPrefix),
                                     String.format("%s/cart/**", apiPrefix),
-                                    String.format("%s/chat-ai**",apiPrefix)
+                                    String.format("%s/chat-ai**",apiPrefix),
+
+                                    "/api-docs",
+                                    "/api-docs/**",
+                                    "/swagger-resources",
+                                    "/swagger-resources/**",
+                                    "/configuration/ui",
+                                    "/configuration/security",
+                                    "/swagger-ui/**",
+                                    "/swagger-ui.html",
+                                    "/webjars/swagger-ui/**",
+                                    "/swagger-ui/index.html"
                             )
                             .permitAll()
                             .requestMatchers("/error").permitAll()
@@ -73,6 +85,7 @@ public class WebSercurityConfig {
 
                             .anyRequest()
                             .authenticated();
+
                     //.anyRequest().permitAll();
                 })
                 //Vô hiệu hóa bảo vệ CSRF.(Cross-Site Request Forgery)

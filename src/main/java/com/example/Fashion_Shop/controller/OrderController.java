@@ -146,4 +146,13 @@ public class OrderController {
     public List<OrderResponseAdmin> getOrderResponseAdmin() {
         return orderService.getOrderResponseAdmin().stream().toList();
     }
+
+    @GetMapping("/admin/by-month-year")
+    public List<OrderResponseAdmin> getOrdersByMonthAndYear(
+            @RequestParam("month") int month,
+            @RequestParam("year") int year) {
+        return orderService.getOrderResponseAdmin(month, year);
+    }
+
+
 }
